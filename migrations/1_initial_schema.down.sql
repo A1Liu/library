@@ -1,1 +1,1 @@
-DROP TABLE users CASCADE;
+DROP TABLE book_basics CASCADE;
