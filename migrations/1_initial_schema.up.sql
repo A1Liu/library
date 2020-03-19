@@ -5,3 +5,13 @@ CREATE TABLE book_basics (
   description   text                      ,
   PRIMARY KEY (id)
 );
+
+create table users (
+  id            SERIAL                    NOT NULL,
+  email         text                      NOT NULL,
+  password      text                      NOT NULL, -- @TODO make this secure
+  permissions   integer                   NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE UNIQUE INDEX email_idx ON users (email);

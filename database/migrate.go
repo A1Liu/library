@@ -1,4 +1,4 @@
-package users
+package database
 
 import (
 	"database/sql"
@@ -6,7 +6,6 @@ import (
 	"github.com/jackc/pgx/stdlib"
 	"log"
 
-	sq "github.com/Masterminds/squirrel"
 	migrate "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -16,31 +15,50 @@ import (
 // is always compatible with the version of the database.
 const version = 1
 
-var db *sql.DB = func() *sql.DB {
+var db *sql.DB = nil
+var migrater *migrate.Migrate = nil
+
+func getDb() *sql.DB {
+	if db != nil {
+		return db
+	}
+
 	c, err := pgx.ParseURI("psql://webserver:webserver@localhost/webserver")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db := stdlib.OpenDB(c)
-	targetInstance, err := postgres.WithInstance(db, new(postgres.Config))
+	db = stdlib.OpenDB(c)
+	return db
+}
+
+func GetMigrate() *migrate.Migrate {
+	if migrater != nil {
+		return migrater
+	}
+
+	instance, err := postgres.WithInstance(getDb(), new(postgres.Config))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", targetInstance)
+	migrater, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = m.Migrate(version) // current version
-	if err != nil && err != migrate.ErrNoChange {
+	return migrater
+}
+
+func GetDb() *sql.DB {
+	if migrater != nil {
+		return db
+	}
+
+	err := GetMigrate().Migrate(version) // current version
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	return db
-}()
-
-func Insert(into string) sq.InsertBuilder {
-	return sq.Insert(into).RunWith(db)
 }
