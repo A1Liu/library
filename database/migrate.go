@@ -13,7 +13,9 @@ import (
 
 // version defines the current migration version. This ensures the app
 // is always compatible with the version of the database.
-const COMPAT_VERSION = 1
+const CompatVersion = 1
+
+var migrated = false
 
 var db *sql.DB = nil
 var migrater *migrate.Migrate = nil
@@ -40,25 +42,93 @@ func getDb() (*sql.DB, *migrate.Migrate) {
 		log.Fatal(err)
 	}
 
+	migrater.Down()
+
 	return db, migrater
 }
 
-func ExperimentDb(try func(*sql.DB)) {
+func ExperimentDb(try func(*sql.DB) error) {
 	db, migrater := getDb()
-	originalVersion, dirty, err := migrater.Version()
+	var originalVersion *uint = nil
+	originalVersionValue, dirty, err := migrater.Version()
 	if dirty {
-		log.Fatal("Database is dirty with version ", originalVersion)
-	}
-	if err != nil && err != migrate.ErrNilVersion {
-		log.Fatal(err)
+		log.Println("Database is dirty with version ", originalVersion)
+		migrater.Drop()
+	} else if err == migrate.ErrNilVersion {
+		originalVersion = nil
+	} else if err != nil {
+		log.Fatal("Error when getting version of database: ", err)
+	} else {
+		originalVersion = &originalVersionValue
 	}
 
-	err = migrater.Migrate(COMPAT_VERSION)
-	if err != nil && err != migrate.ErrNoChange {
-		log.Fatal(err)
+	log.Println("Migrating...")
+	err = migrater.Migrate(CompatVersion)
+	if err != nil {
+		if err == migrate.ErrNoChange {
+			log.Println("No migration performed; actions may be permanent.")
+		} else {
+			log.Fatal("Error when migrating: ", err)
+		}
 	}
 
-	try(db)
+	err = try(db)
+	if err != nil {
+		log.Println("Error while executing closure: ", err)
+	}
 
-	migrater.Migrate(originalVersion)
+	var err2 error
+	if originalVersion == nil {
+		err2 = migrater.Down()
+	} else {
+		err2 = migrater.Migrate(*originalVersion)
+	}
+
+	if err2 != nil && err2 != migrate.ErrNoChange {
+		log.Println("Error migrating back to version ", originalVersion, ": ", err2)
+	}
+}
+
+func CommitDbMigrate(try func(*sql.DB) error) {
+	db, migrater := getDb()
+	var originalVersion *uint = new(uint)
+	didMigration := false
+	if !migrated {
+		originalVersionInner, dirty, err := migrater.Version()
+		*originalVersion = originalVersionInner
+		if dirty {
+			log.Fatal("Database is dirty with version ", originalVersion)
+		}
+		if err != nil && err != migrate.ErrNilVersion {
+			if err == migrate.ErrNilVersion {
+				originalVersion = nil
+			}
+			log.Fatal(err)
+		}
+
+		err = migrater.Migrate(CompatVersion)
+		if err != nil && err != migrate.ErrNoChange {
+			log.Fatal(err)
+		} else if err != migrate.ErrNoChange {
+			didMigration = true
+		}
+	}
+
+	err := try(db)
+	if err != nil {
+		var err2 error = nil
+		if didMigration {
+			if originalVersion == nil {
+				err2 = migrater.Down()
+			} else {
+				err2 = migrater.Migrate(*originalVersion)
+			}
+		}
+
+		if err2 != nil {
+			log.Fatal("Error: ", err2, " while processing error: ", err)
+		} else {
+			log.Fatal(err)
+		}
+	}
 }

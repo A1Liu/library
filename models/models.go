@@ -7,9 +7,10 @@ const (
 )
 
 type User struct {
+  Id        uint
+	CreatedAt string
 	Email     string
-	Password  string
-	UserGroup int
+	UserGroup uint
 }
 
 type Book struct {
