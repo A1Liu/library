@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/stdlib"
+	sq "github.com/Masterminds/squirrel"
+	_ "github.com/lib/pq"
 	"log"
 
 	migrate "github.com/golang-migrate/migrate/v4"
@@ -17,31 +17,34 @@ const CompatVersion = 1
 
 var migrated = false
 
-var db *sql.DB = nil
-var migrater *migrate.Migrate = nil
+var (
+	globalDatabase *sql.DB          = nil
+	globalMigrater *migrate.Migrate = nil
+	psql                            = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+)
 
 func getDb() (*sql.DB, *migrate.Migrate) {
-	if migrater != nil {
-		return db, migrater
+	if globalMigrater != nil {
+		return globalDatabase, globalMigrater
 	}
 
-	c, err := pgx.ParseURI("psql://webserver:webserver@localhost/webserver")
+	connStr := "postgres://webserver:webserver@localhost/webserver"
+	var err error
+	globalDatabase, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db = stdlib.OpenDB(c)
-
-	instance, err := postgres.WithInstance(db, new(postgres.Config))
+	instance, err := postgres.WithInstance(globalDatabase, new(postgres.Config))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	migrater, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
+	globalMigrater, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return db, migrater
+	return globalDatabase, globalMigrater
 }
 
 func ExperimentDb(try func(*sql.DB) error) {
@@ -131,23 +134,23 @@ func CommitDbMigrate(try func(*sql.DB) error) {
 }
 
 func Clear() {
-	if db == nil {
+	if globalDatabase == nil {
 		getDb()
 	}
 
-	migrater.Drop()
-	migrater.Migrate(CompatVersion)
+	globalMigrater.Drop()
+	globalMigrater.Migrate(CompatVersion)
 }
 
 func GetDb() *sql.DB {
-	if db != nil {
-		return db
+	if globalDatabase != nil {
+		return globalDatabase
 	}
 
 	getDb()
-	err := migrater.Migrate(CompatVersion)
+	err := globalMigrater.Migrate(CompatVersion)
 	if err != nil && err != migrate.ErrNoChange {
 		log.Fatal("Error when migrating: ", err)
 	}
-	return db
+	return globalDatabase
 }

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS authors (
   last_name     text                                  NOT NULL,
   PRIMARY KEY (id)
 );
+
 CREATE TABLE IF NOT EXISTS books (
   id            SERIAL                                NOT NULL,
   suggested_at  TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -48,5 +49,3 @@ CREATE TABLE IF NOT EXISTS written_by (
   book_id       integer REFERENCES books (id)         NOT NULL,
   PRIMARY KEY (id)
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS email_idx ON users (email);

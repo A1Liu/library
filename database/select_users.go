@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	psql            = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 	InvalidPageSize = errors.New(
-		"Gave an invalid page size. Pages can between 50 and 100 entries long.")
+		"gave an invalid page size. Pages can between 50 and 100 entries long")
 )
 
 func SelectUsers(db *sql.DB, pageSize, pageIndex uint64) ([]models.User, error) {
