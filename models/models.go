@@ -1,16 +1,30 @@
 package models
 
+import (
+	// "github.com/jackc/pgx/pgtype"
+	"time"
+)
+
 const (
-	NormalUser   int = 0 // Suggest books
-	ElevatedUser int = 1 // Validate books
-	AdminUser    int = 2 // Admin
+	NormalUser   uint = 0 // Suggest books, suggest authors
+	ElevatedUser uint = 1 // Validate books, validate authors
+	AdminUser    uint = 2 // Admin
+)
+
+const (
+	ValidateBooks        uint = 0
+	ValidateAuthors      uint = 1
+	ElevateUser          uint = 2
+	DemoteUser           uint = 3
+	ValidateSingleAuthor uint = 4
+	ValidateSingleBook   uint = 5
 )
 
 type User struct {
-  Id        uint
-	CreatedAt string
+	Id        uint64
+	CreatedAt time.Time
 	Email     string
-	UserGroup uint
+	UserGroup uint64
 }
 
 type Book struct {

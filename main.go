@@ -1,10 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	database "github.com/A1Liu/webserver/database"
+	"log"
+	"net/http"
+
 	// "github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/webserver/web"
 	sq "github.com/Masterminds/squirrel"
 )
 
@@ -12,28 +15,19 @@ var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 func main() {
 
-	database.ExperimentDb(func(db *sql.DB) error {
+	fmt.Println("Inserting into database...")
+	_, err := psql.Insert("").
+		Into("users").
+		Columns("email", "password", "user_group").
+		Values("hi@gmil.com", "hellofresh", 1).
+		RunWith(database.GetDb()).
+		Query()
 
-		fmt.Println("Inserting into database...")
-		_, err := psql.Insert("").
-			Into("users").
-			Columns("email", "password", "user_group").
-			Values("hi@gmail.com", "hellofresh", 0).
-			RunWith(db).
-			Query()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Reading inserted data from database...")
-		users, err := database.SelectUsers(db, 50, 0)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(users)
-
-		return nil
-	})
+	http.HandleFunc("/api/v1/clear", web.Clear)
+	http.HandleFunc("/api/v1/users", web.ListUsers)
+	http.ListenAndServe(":8080", nil)
 }

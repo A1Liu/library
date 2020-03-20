@@ -41,9 +41,6 @@ func getDb() (*sql.DB, *migrate.Migrate) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	migrater.Down()
-
 	return db, migrater
 }
 
@@ -131,4 +128,26 @@ func CommitDbMigrate(try func(*sql.DB) error) {
 			log.Fatal(err)
 		}
 	}
+}
+
+func Clear() {
+	if db == nil {
+		getDb()
+	}
+
+	migrater.Drop()
+	migrater.Migrate(CompatVersion)
+}
+
+func GetDb() *sql.DB {
+	if db != nil {
+		return db
+	}
+
+	getDb()
+	err := migrater.Migrate(CompatVersion)
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Error when migrating: ", err)
+	}
+	return db
 }

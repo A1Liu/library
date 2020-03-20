@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id            SERIAL                                NOT NULL,
   created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  email         text                                  NOT NULL,
+  email         text                                  NOT NULL UNIQUE,
   password      text                                  NOT NULL, -- @TODO make this secure
   user_group    integer                               NOT NULL,
   PRIMARY KEY (id)
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS books (
   PRIMARY KEY (id)
 );
 
-create table written_by (
+CREATE TABLE IF NOT EXISTS written_by (
   id            SERIAL                                NOT NULL,
   suggested_at  TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
   suggested_by  integer REFERENCES users (id)         NOT NULL,
