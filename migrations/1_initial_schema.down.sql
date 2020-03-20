@@ -1,4 +1,3 @@
 DROP INDEX IF EXISTS email_idx;
-DROP TABLE IF EXISTS book_suggestions;
 DROP TABLE IF EXISTS books;
 DROP TABLE IF EXISTS users;

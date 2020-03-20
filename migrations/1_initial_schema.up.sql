@@ -9,18 +9,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS books (
   id            SERIAL                        NOT NULL,
-  created_at    TIMESTAMP WITH TIME ZONE      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  suggested_at  TIMESTAMP WITH TIME ZONE      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  suggested_by  integer REFERENCES users (id) NOT NULL,
+  validated_at  TIMESTAMP WITH TIME ZONE      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  validated_by  integer REFERENCES users (id) NOT NULL,
   title         text                          NOT NULL,
   description   text                          ,
-  validated_by  integer REFERENCES users (id) NOT NULL,
-  PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS book_suggestions (
-  id            SERIAL                        NOT NULL,
-  created_at    TIMESTAMP WITH TIME ZONE      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  suggested_by  integer REFERENCES users (id) NOT NULL,
-  approved_by   integer REFERENCES users (id) ,
   PRIMARY KEY (id)
 );
 
