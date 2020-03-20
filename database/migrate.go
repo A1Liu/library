@@ -13,14 +13,14 @@ import (
 
 // version defines the current migration version. This ensures the app
 // is always compatible with the version of the database.
-const version = 1
+const COMPAT_VERSION = 1
 
 var db *sql.DB = nil
 var migrater *migrate.Migrate = nil
 
-func getDb() *sql.DB {
-	if db != nil {
-		return db
+func getDb() (*sql.DB, *migrate.Migrate) {
+	if migrater != nil {
+		return db, migrater
 	}
 
 	c, err := pgx.ParseURI("psql://webserver:webserver@localhost/webserver")
@@ -29,15 +29,8 @@ func getDb() *sql.DB {
 	}
 
 	db = stdlib.OpenDB(c)
-	return db
-}
 
-func GetMigrate() *migrate.Migrate {
-	if migrater != nil {
-		return migrater
-	}
-
-	instance, err := postgres.WithInstance(getDb(), new(postgres.Config))
+	instance, err := postgres.WithInstance(db, new(postgres.Config))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,18 +40,25 @@ func GetMigrate() *migrate.Migrate {
 		log.Fatal(err)
 	}
 
-	return migrater
+	return db, migrater
 }
 
-func GetDb() *sql.DB {
-	if migrater != nil {
-		return db
+func ExperimentDb(try func(*sql.DB)) {
+	db, migrater := getDb()
+	originalVersion, dirty, err := migrater.Version()
+	if dirty {
+		log.Fatal("Database is dirty with version ", originalVersion)
 	}
-
-	err := GetMigrate().Migrate(version) // current version
-	if err != nil {
+	if err != nil && err != migrate.ErrNilVersion {
 		log.Fatal(err)
 	}
 
-	return db
+	err = migrater.Migrate(COMPAT_VERSION)
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatal(err)
+	}
+
+	try(db)
+
+	migrater.Migrate(originalVersion)
 }

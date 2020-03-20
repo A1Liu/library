@@ -1,2 +1,3 @@
 webserver
 webserver.exe
+main.exe # For when someone calls `go build main.go`
