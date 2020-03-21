@@ -1,9 +1,8 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
-
 	// "github.com/A1Liu/webserver/models"
 	"github.com/A1Liu/webserver/web"
 	sq "github.com/Masterminds/squirrel"
@@ -13,10 +12,18 @@ var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	http.HandleFunc("/api/v1/clear", web.Clear)
-	http.HandleFunc("/api/v1/users", web.ListUsers)
-	http.HandleFunc("/api/v1/addUser", web.AddUser)
-	http.HandleFunc("/api/v1/addBook", web.AddBook)
-	http.HandleFunc("/", web.ExecuteTemplate("index", "index.html", web.Index))
-	http.ListenAndServe(":80", nil)
+	router := gin.Default()
+
+	v1 := router.Group("/api/v1")
+	{
+		v1.GET("/clear", web.Clear)
+		v1.GET("/users", web.ListUsers)
+		v1.GET("/addUser", web.AddUser)
+		v1.GET("/addBook", web.AddBook)
+		v1.GET("/getUser", web.GetUser)
+	}
+
+
+	router.GET("/", web.ExecuteTemplate("index", "index.html", web.Index))
+	router.Run(":80")
 }

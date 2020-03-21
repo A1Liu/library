@@ -3,8 +3,10 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"github.com/A1Liu/webserver/utils"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var (
@@ -15,22 +17,32 @@ var (
 
 )
 
-
-
-func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) error {
-	if strings.Contains(username, "@") {
-		return InvalidUsername
+func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) (string,error) {
+	if len(username) > 16 || strings.Contains(username, "@") {
+		return "", InvalidUsername
 	} else if len(email) > 254 || !rxEmail.MatchString(email) {
-		return InvalidEmail
+		return "", InvalidEmail
 	}
 
-	rows, err := psql.Insert("users").
+	row := psql.Insert("users").
 		Columns("username", "email", "password", "user_group").
 		Values(username, email, password, userGroup).
+		Suffix("RETURNING \"id\"").
 		RunWith(db).
-		Query()
-	if err == nil {
-		rows.Close()
+		QueryRow()
+
+	var id uint64
+	row.Scan(&id)
+	token := utils.RandomString(128)
+	_, err := psql.Insert("tokens").
+		Columns("expires_at", "user_id", "value").
+		Values(time.Now().Add(time.Hour * 24 * 30), id, token).
+		RunWith(db).
+		Exec()
+
+	if err != nil {
+		return "", err
 	}
-	return err
+
+	return token, nil
 }

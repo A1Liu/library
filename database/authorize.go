@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 	"errors"
 	"github.com/A1Liu/webserver/models"
 	sq "github.com/Masterminds/squirrel"
@@ -50,7 +51,42 @@ func AuthorizeWithPassword(db *sql.DB, usernameOrEmail, password string) (*model
 	return nil, IncorrectPassword
 }
 
-func AuthorizeWithToken(token string) (*models.User, error) {
-	log.Fatal("Not implmented")
-	return nil, nil
+func AuthorizeWithToken(db *sql.DB, token string) (*models.User, error) {
+	if len(token) != 128 {
+		return nil, InvalidToken
+	}
+
+	rows, err := psql.Select("users.id", "users.created_at", "users.username", "users.email", "users.user_group", "tokens.expires_at").
+		From("users").
+		Join("tokens ON tokens.user_id = users.id").
+		Where(sq.Eq{"tokens.value": token}).
+		RunWith(db).
+		Query()
+
+	if err != nil {
+		return nil,err
+	}
+
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil,NonexistentUser
+	}
+
+	var user models.User
+	var tokenExpiry time.Time
+	rows.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email, &user.UserGroup, &tokenExpiry)
+	if rows.Next() {
+		log.Fatal("Unique constraint has been broken somehow.")
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal("Why?", err)
+	}
+
+	if time.Now().Before(tokenExpiry) {
+		return &user, rows.Err()
+	}
+
+	return nil, ExpiredToken
 }

@@ -1,10 +1,19 @@
 CREATE TABLE IF NOT EXISTS users (
   id            SERIAL                                NOT NULL,
   created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  username      varchar(16)                           NOT NULL,
+  username      varchar(16)                           NOT NULL UNIQUE,
   email         text                                  NOT NULL UNIQUE,
   password      text                                  NOT NULL, -- @TODO make this secure
   user_group    integer                               NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS tokens (
+  id            SERIAL                                NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at    TIMESTAMP WITH TIME ZONE              NOT NULL,
+  user_id       integer REFERENCES users (id)         NOT NULL,
+  value         char(128)                             NOT NULL UNIQUE,
   PRIMARY KEY (id)
 );
 

@@ -1,11 +1,11 @@
 package web
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/markbates/pkger"
 	"html/template"
 	"io/ioutil"
 	"log"
-	"net/http"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 	templates = make(map[string]*template.Template)
 )
 
-func ExecuteTemplate(name, path string, f func(r *http.Request) interface {}) http.HandlerFunc {
+func ExecuteTemplate(name, path string, f func(c *gin.Context) interface {}) gin.HandlerFunc {
 	temp, ok := templates[name]
 	if !ok {
 		file, err := TemplatesDir.Open(path)
@@ -29,8 +29,8 @@ func ExecuteTemplate(name, path string, f func(r *http.Request) interface {}) ht
 		templates[name] = t
 		temp = t
 	}
-	return func(w http.ResponseWriter, r * http.Request) {
-		err := temp.Execute(w, f(r))
+	return func(c *gin.Context) {
+		err := temp.Execute(c.Writer, f(c))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -38,6 +38,6 @@ func ExecuteTemplate(name, path string, f func(r *http.Request) interface {}) ht
 }
 
 type IndexVars struct {}
-func Index(r *http.Request) interface{} {
+func Index(c *gin.Context) interface{} {
 	return IndexVars{}
 }
