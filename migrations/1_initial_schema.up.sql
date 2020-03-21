@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS authors (
   id            SERIAL                                NOT NULL,
   suggested_at  TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
   suggested_by  integer REFERENCES users (id)         , -- null means suggested anonymously
-  validated_at  TIMESTAMP WITH TIME ZONE              ,
+  validated_at  TIMESTAMP WITH TIME ZONE              DEFAULT CURRENT_TIMESTAMP,
   validated_by  integer REFERENCES users (id)         ,
   first_name    text                                  NOT NULL,
   last_name     text                                  NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS books (
   id            SERIAL                                NOT NULL,
   suggested_at  TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
   suggested_by  integer REFERENCES users (id)         , -- null means suggested anonymously
-  validated_at  TIMESTAMP WITH TIME ZONE              ,
+  validated_at  TIMESTAMP WITH TIME ZONE              DEFAULT CURRENT_TIMESTAMP,
   validated_by  integer REFERENCES users (id)         ,
   title         text                                  NOT NULL,
   description   text                                  ,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS written_by (
   id            SERIAL                                NOT NULL,
   suggested_at  TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
   suggested_by  integer REFERENCES users (id)         NOT NULL,
-  validated_at  TIMESTAMP WITH TIME ZONE              ,
+  validated_at  TIMESTAMP WITH TIME ZONE              DEFAULT CURRENT_TIMESTAMP,
   validated_by  integer REFERENCES users (id)         ,
   author_id     integer REFERENCES authors (id)       NOT NULL,
   book_id       integer REFERENCES books (id)         NOT NULL,

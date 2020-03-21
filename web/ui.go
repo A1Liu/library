@@ -10,10 +10,10 @@ import (
 
 var (
 	TemplatesDir = pkger.Dir("/templates")
-	templates = make(map[string]*template.Template)
+	templates    = make(map[string]*template.Template)
 )
 
-func ExecuteTemplate(name, path string, f func(c *gin.Context) interface {}) gin.HandlerFunc {
+func ExecuteTemplate(name, path string, f func(c *gin.Context) interface{}) gin.HandlerFunc {
 	temp, ok := templates[name]
 	if !ok {
 		file, err := TemplatesDir.Open(path)
@@ -37,7 +37,8 @@ func ExecuteTemplate(name, path string, f func(c *gin.Context) interface {}) gin
 	}
 }
 
-type IndexVars struct {}
+type IndexVars struct{}
+
 func Index(c *gin.Context) interface{} {
 	return IndexVars{}
 }

@@ -1,50 +1,75 @@
 package web
 
 import (
+	"errors"
 	"github.com/A1Liu/webserver/database"
+	"github.com/A1Liu/webserver/models"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
-func ListUsers(c *gin.Context) {
-	users, err := database.SelectUsers(database.GetDb(), 50, 0)
-	jsonInfer(c, users, err)
+type ErrorApiMessage struct {
+	Status  uint64 `json:"status"`
+	Message string `json:"message"`
 }
 
-func Clear(c *gin.Context) {
-	err := database.Clear()
-	jsonInfer(c, err, err)
+type OkApiMessage struct {
+	Status uint64      `json:"status"`
+	Value  interface{} `json:"value"`
 }
 
-func AddUser(c *gin.Context) {
-	userGroup, err := strconv.ParseUint(c.Query("userGroup"), 10, 64)
-	username := c.Query("username")
-	email := c.Query("email")
-	password := c.Query("email")
+var (
+	MissingLogin       = errors.New("missing login query parameter")
+	MissingPassword    = errors.New("missing password query parameter")
+	NoLoginInformation = errors.New("neither login nor password was provided")
+	MissingToken       = errors.New("missing token")
+	TooManyAuthMethods = errors.New("gave too many authorization methods")
+)
 
-	token, err := database.InsertUser(database.GetDb(), username, email, password, userGroup)
-	jsonInfer(c, token, err)
-}
-
-func AddBook(c *gin.Context) {
-	title:= c.Query("title")
-	description:= c.Query("description")
-
-	user, err := getQueryParamLogin(c)
-	if err != nil && err != MissingAuthorization {
-		jsonInfer(c, nil, err)
-	}
-	var id *uint64
-	if user == nil {
-		id = nil
+func JsonInfer(c *gin.Context, object interface{}, err error) {
+	if err != nil {
+		JsonFail(c, err)
 	} else {
-		id = &user.Id
+		c.JSON(200, OkApiMessage{200, object})
 	}
-
-	jsonInfer(c, nil, database.InsertBook(database.GetDb(), id, title, description))
 }
 
-func GetUser(c *gin.Context) {
-	user, err := getQueryParamLogin(c)
-	jsonInfer(c, user, err)
+func JsonFail(c *gin.Context, err error) {
+	c.JSON(400, ErrorApiMessage{400, err.Error()})
+}
+
+func GetQueryParamLogin(c *gin.Context) (*models.User, error) {
+	var login *string
+	usernameOrEmail, ok := c.GetQuery("login")
+	if ok {
+		login = &usernameOrEmail
+	} else {
+		login = nil
+	}
+
+	var passwordNullable *string
+	password, ok := c.GetQuery("password")
+	if ok {
+		passwordNullable = &password
+	} else {
+		passwordNullable = nil
+	}
+
+	if login == nil && passwordNullable != nil {
+		return nil, MissingLogin
+	} else if login != nil && passwordNullable == nil {
+		return nil, MissingPassword
+	} else if login == nil && passwordNullable == nil {
+		return nil, NoLoginInformation
+	}
+
+	return database.AuthorizeWithPassword(database.GetDb(), *login, *passwordNullable)
+}
+
+func GetQueryParamToken(c *gin.Context) (*models.User, error) {
+	token, ok := c.GetQuery("token")
+	if !ok {
+		return nil, MissingToken
+	} else {
+		return database.AuthorizeWithToken(database.GetDb(), token)
+	}
 }

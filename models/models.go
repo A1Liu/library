@@ -22,6 +22,8 @@ type Book struct {
 	Id          uint64
 	Title       string
 	Description string
-	SuggestedBy uint64 // Not Null
-	ValidatedBy uint64
+	SuggestedBy *uint64
+	SuggestedAt time.Time
+	ValidatedBy *uint64
+	ValidatedAt *time.Time
 }

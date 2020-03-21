@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/A1Liu/webserver/database"
 	"github.com/gin-gonic/gin"
 	"log"
 	// "github.com/A1Liu/webserver/models"
@@ -16,13 +17,17 @@ func main() {
 
 	v1 := router.Group("/api/v1")
 	{
-		v1.GET("/clear", web.Clear)
-		v1.GET("/users", web.ListUsers)
-		v1.GET("/addUser", web.AddUser)
-		v1.GET("/addBook", web.AddBook)
-		v1.GET("/getUser", web.GetUser)
-	}
+		users := v1.Group("/users")
+		web.AddUsersApi(users)
 
+		books := v1.Group("/books")
+		web.AddBooksApi(books)
+
+		v1.GET("/clear", func(c *gin.Context) {
+			err := database.Clear()
+			web.JsonInfer(c, err, err)
+		})
+	}
 
 	router.GET("/", web.ExecuteTemplate("index", "index.html", web.Index))
 	router.Run(":80")

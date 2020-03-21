@@ -1,6 +1,5 @@
 package models
 
-
 const (
 	ValidateBooks        uint = 0
 	ValidateAuthors      uint = 1
@@ -12,5 +11,5 @@ const (
 
 type Permission struct {
 	PermissionType uint64
-	Reference uint64
+	Reference      uint64
 }
