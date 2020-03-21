@@ -10,25 +10,18 @@ const (
 	AdminUser    uint = 2 // Admin
 )
 
-const (
-	ValidateBooks        uint = 0
-	ValidateAuthors      uint = 1
-	ElevateUser          uint = 2
-	DemoteUser           uint = 3
-	ValidateSingleAuthor uint = 4
-	ValidateSingleBook   uint = 5
-)
-
 type User struct {
 	Id        uint64
 	CreatedAt time.Time
+	Username  string
 	Email     string
 	UserGroup uint64
 }
 
 type Book struct {
+	Id          uint64
 	Title       string
 	Description string
-	SuggestedBy *User // Not Null
-	ValidatedBy *User
+	SuggestedBy uint64 // Not Null
+	ValidatedBy uint64
 }

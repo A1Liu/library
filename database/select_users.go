@@ -19,7 +19,8 @@ func SelectUsers(db *sql.DB, pageSize, pageIndex uint64) ([]models.User, error) 
 
 	users := make([]models.User, pageSize)[:0]
 
-	rows, err := psql.Select("id", "created_at", "email", "user_group").From("users").
+	rows, err := psql.Select("id", "created_at", "username", "email", "user_group").
+		From("users").
 		Where(sq.Lt{"id": pageSize * (pageIndex + 1)}).
 		Where(sq.GtOrEq{"id": pageSize * pageIndex}).
 		Limit(pageSize).
@@ -34,7 +35,7 @@ func SelectUsers(db *sql.DB, pageSize, pageIndex uint64) ([]models.User, error) 
 	var user models.User
 
 	for rows.Next() {
-		err := rows.Scan(&user.Id, &user.CreatedAt, &user.Email, &user.UserGroup)
+		err := rows.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email, &user.UserGroup)
 		if err != nil {
 			return users, err
 		}
@@ -42,5 +43,5 @@ func SelectUsers(db *sql.DB, pageSize, pageIndex uint64) ([]models.User, error) 
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, rows.Err()
 }

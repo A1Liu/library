@@ -19,13 +19,13 @@ var migrated = false
 
 var (
 	globalDatabase *sql.DB          = nil
-	globalMigrater *migrate.Migrate = nil
+	globalMigrate  *migrate.Migrate = nil
 	psql                            = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 )
 
 func getDb() (*sql.DB, *migrate.Migrate) {
-	if globalMigrater != nil {
-		return globalDatabase, globalMigrater
+	if globalDatabase != nil {
+		return globalDatabase, globalMigrate
 	}
 
 	connStr := "postgres://webserver:webserver@localhost/webserver"
@@ -40,11 +40,11 @@ func getDb() (*sql.DB, *migrate.Migrate) {
 		log.Fatal(err)
 	}
 
-	globalMigrater, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
+	globalMigrate, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return globalDatabase, globalMigrater
+	return globalDatabase, globalMigrate
 }
 
 func ExperimentDb(try func(*sql.DB) error) {
@@ -133,13 +133,20 @@ func CommitDbMigrate(try func(*sql.DB) error) {
 	}
 }
 
-func Clear() {
+func Clear() error {
 	if globalDatabase == nil {
 		getDb()
 	}
 
-	globalMigrater.Drop()
-	globalMigrater.Migrate(CompatVersion)
+	err := globalMigrate.Down()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	err = globalMigrate.Migrate(CompatVersion)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetDb() *sql.DB {
@@ -148,7 +155,7 @@ func GetDb() *sql.DB {
 	}
 
 	getDb()
-	err := globalMigrater.Migrate(CompatVersion)
+	err := globalMigrate.Migrate(CompatVersion)
 	if err != nil && err != migrate.ErrNoChange {
 		log.Fatal("Error when migrating: ", err)
 	}
