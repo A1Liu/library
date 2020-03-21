@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/A1Liu/webserver/database"
+	"github.com/A1Liu/webserver/models"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
@@ -24,6 +25,10 @@ func AddBooksApi(books *gin.RouterGroup) {
 		if err != nil && err != NoLoginInformation {
 			JsonFail(c, err)
 			return
+		}
+
+		if user.UserGroup == models.AdminUser {
+
 		}
 
 		bookId, err := database.InsertBook(database.GetDb(), user, title, description)

@@ -16,18 +16,19 @@ func main() {
 	router := gin.Default()
 
 	v1 := router.Group("/api/v1")
-	{
-		users := v1.Group("/users")
-		web.AddUsersApi(users)
+	users := v1.Group("/users")
+	web.AddUsersApi(users)
 
-		books := v1.Group("/books")
-		web.AddBooksApi(books)
+	permissions := users.Group("/permissions")
+	web.AddPermissionsApi(permissions)
 
-		v1.GET("/clear", func(c *gin.Context) {
-			err := database.Clear()
-			web.JsonInfer(c, err, err)
-		})
-	}
+	books := v1.Group("/books")
+	web.AddBooksApi(books)
+
+	v1.GET("/clear", func(c *gin.Context) {
+		err := database.Clear()
+		web.JsonInfer(c, err, err)
+	})
 
 	router.GET("/", web.ExecuteTemplate("index", "index.html", web.Index))
 	router.Run(":80")

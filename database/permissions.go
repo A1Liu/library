@@ -21,6 +21,10 @@ func AddPermission(db *sql.DB, giver *models.User, userId uint64,
 }
 
 func HasPermissions(db *sql.DB, user *models.User, permissions []models.Permission) (bool, error) {
+	if user.UserGroup == models.AdminUser { // @Responsibility should this be somewhere else?
+		return true, nil
+	}
+
 	rows, err := psql.Select("permission_to").
 		From("permissions").
 		Where(sq.Eq{"given_to": user.Id}).

@@ -6,7 +6,6 @@ import (
 	"github.com/A1Liu/webserver/models"
 	"github.com/gin-gonic/gin"
 	"strconv"
-	"strings"
 )
 
 var (
@@ -25,7 +24,7 @@ func AddUsersApi(users *gin.RouterGroup) {
 
 	users.GET("/add", func(c *gin.Context) {
 		_, err := database.InsertUser(database.GetDb(), c.Query("username"),
-			c.Query("email"), c.Query("email"), 0)
+			c.Query("email"), c.Query("password"), 0)
 		JsonInfer(c, nil, err)
 	})
 
@@ -40,19 +39,12 @@ func AddUsersApi(users *gin.RouterGroup) {
 
 	users.GET("/get", func(c *gin.Context) {
 		user, err := GetQueryParamToken(c)
-		isFull, ok := c.GetQuery("full")
-		if ok && strings.ToLower(isFull) == "true" {
-			// if !JsonFail(c, err) {
-			// 	userFull, err := database.GetFullUser(database.GetDb(), user)
-			// 	JsonInfer(c, userFull, err)
-			// }
-			JsonInfer(c, user, err)
-		} else {
-			JsonInfer(c, user, err)
-		}
+		JsonInfer(c, user, err)
 	})
+}
 
-	users.GET("/permissions/add", func(c *gin.Context) {
+func AddPermissionsApi(permissions *gin.RouterGroup) {
+	permissions.GET("/add", func(c *gin.Context) {
 		user, err := GetQueryParamToken(c)
 		if JsonFail(c, err) {
 			return
@@ -74,23 +66,21 @@ func AddUsersApi(users *gin.RouterGroup) {
 			return
 		}
 
-		if user.UserGroup != models.AdminUser {
-			ok, err := database.HasPermissions(database.GetDb(), user,
-				[]models.Permission{*models.BroadPermission(models.ElevateUsers), *permission})
-			if JsonFail(c, err) {
-				return
-			}
-			if !ok {
-				JsonFail(c, MissingPermissions)
-				return
-			}
+		ok, err := database.HasPermissions(database.GetDb(), user,
+			[]models.Permission{*models.BroadPermission(models.ElevateUsers), *permission})
+		if JsonFail(c, err) {
+			return
+		}
+		if !ok {
+			JsonFail(c, MissingPermissions)
+			return
 		}
 
 		id, err := database.AddPermission(database.GetDb(), user, *target, permission)
 		JsonInfer(c, id, err)
 	})
 
-	users.GET("/permissions/remove", func(c *gin.Context) {
+	permissions.GET("/remove", func(c *gin.Context) {
 		user, err := GetQueryParamToken(c)
 		if JsonFail(c, err) {
 			return
@@ -112,20 +102,17 @@ func AddUsersApi(users *gin.RouterGroup) {
 			return
 		}
 
-		if user.UserGroup != models.AdminUser {
-			ok, err := database.HasPermissions(database.GetDb(), user,
-				[]models.Permission{*models.BroadPermission(models.DemoteUsers), *permission})
-			if JsonFail(c, err) {
-				return
-			}
-			if !ok {
-				JsonFail(c, MissingPermissions)
-				return
-			}
+		ok, err := database.HasPermissions(database.GetDb(), user,
+			[]models.Permission{*models.BroadPermission(models.DemoteUsers), *permission})
+		if JsonFail(c, err) {
+			return
+		}
+		if !ok {
+			JsonFail(c, MissingPermissions)
+			return
 		}
 
 		err = database.RemovePermissions(database.GetDb(), *target, permission)
 		JsonInfer(c, err, err)
 	})
-
 }

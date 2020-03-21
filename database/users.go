@@ -10,22 +10,27 @@ import (
 )
 
 var (
-	InvalidUsername = errors.New("username was invalid")
-	InvalidEmail    = errors.New("email was invalid")
+	InvalidUsername = errors.New("username was invalid; must be 2-16 long, begin with a letter, and contain alphanumerics/underscores only")
+	InvalidEmail    = errors.New("email was in an invalid format")
+	InvalidPassword = errors.New("password was invalid; must be 5-32 long")
 	// https://www.alexedwards.net/blog/validation-snippets-for-go#email-validation
 	InvalidPageSize = errors.New(
 		"gave an invalid page size. Pages can between 50 and 100 entries long")
 
-	rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	rxUsername = regexp.MustCompile("^[a-z][a-z0-9_]*$")
+	rxEmail    = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
 func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) (uint64, error) {
-	if len(username) > 16 || strings.Contains(username, "@") {
+	username = strings.ToLower(username)
+	if len(username) < 2 || len(username) > 16 || strings.Contains(username, "@") {
 		return 0, InvalidUsername
 	} else if len(email) > 254 || !rxEmail.MatchString(email) {
 		return 0, InvalidEmail
 	} else if !models.IsValidUserGroup(userGroup) {
 		return 0, models.InvalidUserGroup
+	} else if len(password) < 5 || len(password) > 32 {
+		return 0, InvalidPassword
 	}
 
 	row := psql.Insert("users").
