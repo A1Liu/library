@@ -36,10 +36,10 @@ func SelectBooks(db *sql.DB, pageIndex uint64) ([]models.Book, error) {
 	return books, rows.Err()
 }
 
-func InsertBook(db *sql.DB, userId *uint64, title string, description string) (uint64, error) {
+func InsertBook(db *sql.DB, user *models.User, title string, description string) (uint64, error) {
 	row := psql.Insert("books").
 		Columns("suggested_by", "validated_at", "title", "description").
-		Values(userId, nil, title, description).
+		Values(user.NilId(), nil, title, description).
 		RunWith(db).
 		Suffix("RETURNING \"id\"").
 		QueryRow()
@@ -49,10 +49,11 @@ func InsertBook(db *sql.DB, userId *uint64, title string, description string) (u
 	return id, err
 }
 
-func InsertValidateBook(db *sql.DB, userId uint64, title string, description string) (uint64, error) {
+func InsertValidateBook(db *sql.DB, user *models.User,
+	title string, description string) (uint64, error) {
 	row := psql.Insert("books").
 		Columns("suggested_by", "validated_by", "title", "description").
-		Values(userId, userId, title, description).
+		Values(user.NilId(), user.NilId(), title, description).
 		RunWith(db).
 		Suffix("RETURNING \"id\"").
 		QueryRow()
@@ -62,9 +63,9 @@ func InsertValidateBook(db *sql.DB, userId uint64, title string, description str
 	return id, err
 }
 
-func ValidateBook(db *sql.DB, userId uint64, bookId uint64) error {
+func ValidateBook(db *sql.DB, user *models.User, bookId uint64) error {
 	_, err := psql.Update("books").
-		Set("validated_by", userId).
+		Set("validated_by", user.NilId()).
 		Where(sq.Eq{"id": bookId}).
 		Where(sq.Eq{"validated_by": nil}).
 		RunWith(db).

@@ -25,14 +25,9 @@ func AddBooksApi(books *gin.RouterGroup) {
 			JsonFail(c, err)
 			return
 		}
-		var id *uint64
-		if user == nil {
-			id = nil
-		} else {
-			id = &user.Id
-		}
 
-		bookId, err := database.InsertBook(database.GetDb(), id, title, description)
+		bookId, err := database.InsertBook(database.GetDb(), user, title, description)
 		JsonInfer(c, bookId, err)
 	})
+
 }

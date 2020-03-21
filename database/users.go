@@ -19,11 +19,13 @@ var (
 	rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
-func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) (string, error) {
+func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) (uint64, error) {
 	if len(username) > 16 || strings.Contains(username, "@") {
-		return "", InvalidUsername
+		return 0, InvalidUsername
 	} else if len(email) > 254 || !rxEmail.MatchString(email) {
-		return "", InvalidEmail
+		return 0, InvalidEmail
+	} else if !models.IsValidUserGroup(userGroup) {
+		return 0, models.InvalidUserGroup
 	}
 
 	row := psql.Insert("users").
@@ -34,8 +36,8 @@ func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) 
 		QueryRow()
 
 	var id uint64
-	row.Scan(&id)
-	return CreateToken(db, id)
+	err := row.Scan(&id)
+	return id, err
 }
 
 func SelectUsers(db *sql.DB, pageIndex uint64) ([]models.User, error) {
@@ -61,7 +63,6 @@ func SelectUsers(db *sql.DB, pageIndex uint64) ([]models.User, error) {
 		if err != nil {
 			return users, err
 		}
-
 		users = append(users, user)
 	}
 

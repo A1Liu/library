@@ -1,13 +1,18 @@
 package models
 
 import (
+	"errors"
+	"log"
 	"time"
 )
 
 const (
-	NormalUser   uint = 0 // Suggest books, suggest authors
-	ElevatedUser uint = 1 // Validate books, validate authors
-	AdminUser    uint = 2 // Admin
+	NormalUser uint64 = 0 // Suggest books, suggest authors
+	AdminUser  uint64 = 1 // Admin
+)
+
+var (
+	InvalidUserGroup = errors.New("user group was invalid")
 )
 
 type User struct {
@@ -18,12 +23,46 @@ type User struct {
 	UserGroup uint64
 }
 
+func (user *User) NilId() *uint64 {
+	if user == nil {
+		return nil
+	} else {
+		return &user.Id
+	}
+}
+
+func GetUserGroup(value uint64) string {
+	switch value {
+	case NormalUser:
+		return "NormalUser"
+	case AdminUser:
+		return "AdminUser"
+	default:
+		log.Fatal("Got value ", value)
+		return ""
+	}
+}
+
+func IsValidUserGroup(value uint64) bool {
+	return value < 3
+}
+
 type Book struct {
 	Id          uint64
-	Title       string
-	Description string
 	SuggestedBy *uint64
 	SuggestedAt time.Time
 	ValidatedBy *uint64
 	ValidatedAt *time.Time
+	Title       string
+	Description string
+}
+
+type Author struct {
+	Id          uint64
+	SuggestedBy *uint64
+	SuggestedAt time.Time
+	ValidatedBy *uint64
+	ValidatedAt *time.Time
+	FirstName   string
+	LastName    string
 }

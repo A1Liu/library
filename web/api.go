@@ -2,9 +2,11 @@ package web
 
 import (
 	"errors"
+	"fmt"
 	"github.com/A1Liu/webserver/database"
 	"github.com/A1Liu/webserver/models"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type ErrorApiMessage struct {
@@ -27,14 +29,18 @@ var (
 
 func JsonInfer(c *gin.Context, object interface{}, err error) {
 	if err != nil {
-		JsonFail(c, err)
+		c.JSON(400, ErrorApiMessage{400, err.Error()})
 	} else {
 		c.JSON(200, OkApiMessage{200, object})
 	}
 }
 
-func JsonFail(c *gin.Context, err error) {
-	c.JSON(400, ErrorApiMessage{400, err.Error()})
+func JsonFail(c *gin.Context, err error) bool {
+	if err != nil {
+		c.JSON(400, ErrorApiMessage{400, err.Error()})
+		return true
+	}
+	return false
 }
 
 func GetQueryParamLogin(c *gin.Context) (*models.User, error) {
@@ -72,4 +78,14 @@ func GetQueryParamToken(c *gin.Context) (*models.User, error) {
 	} else {
 		return database.AuthorizeWithToken(database.GetDb(), token)
 	}
+}
+
+func QueryParamUint(c *gin.Context, param string) (*uint64, error) {
+	valString, ok := c.GetQuery(param)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("Missing required param `%s`", param))
+	}
+
+	val, err := strconv.ParseUint(valString, 10, 64)
+	return &val, err
 }
