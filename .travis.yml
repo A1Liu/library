@@ -1,9 +1,12 @@
 language: go
+
 go:
 - "1.14"
+
 before_script:
-  - psql -c 'CREATE ROLE webserver WITH SUPERUSER LOGIN;' -U postgres
-  - psql -c 'CREATE DATABASE webserver;' -U postgres
-  - psql -c 'ALTER ROLE webserver WITH PASSWORD "webserver"' -U webserver
+  - psql -c "CREATE ROLE webserver WITH SUPERUSER LOGIN;" -U postgres
+  - psql -c "CREATE DATABASE webserver;" -U postgres
+  - psql -c "ALTER ROLE webserver WITH PASSWORD 'webserver';" -U webserver
+
 services:
   - postgresql
