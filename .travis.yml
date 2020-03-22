@@ -8,5 +8,8 @@ before_script:
   - psql -c "CREATE DATABASE webserver;" -U postgres
   - psql -c "ALTER ROLE webserver WITH PASSWORD 'webserver';" -U webserver
 
+script:
+  - go test -v ./...
+
 services:
   - postgresql
