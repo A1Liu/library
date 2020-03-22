@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"time"
@@ -51,18 +52,25 @@ type Book struct {
 	Id          uint64
 	SuggestedBy *uint64
 	SuggestedAt time.Time
-	ValidatedBy *uint64
+	ValidatedBy sql.NullInt64
 	ValidatedAt *time.Time
 	Title       string
 	Description string
+	ImageId     sql.NullInt64
 }
 
 type Author struct {
 	Id          uint64
 	SuggestedBy *uint64
 	SuggestedAt time.Time
-	ValidatedBy *uint64
+	ValidatedBy sql.NullInt64
 	ValidatedAt *time.Time
 	FirstName   string
 	LastName    string
+	ImageId     sql.NullInt64
+}
+
+type WrittenBy struct {
+	AuthorId uint64
+	BookId   uint64
 }

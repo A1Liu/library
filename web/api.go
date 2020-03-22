@@ -43,7 +43,7 @@ func JsonFail(c *gin.Context, err error) bool {
 	return false
 }
 
-func GetQueryParamLogin(c *gin.Context) (*models.User, error) {
+func QueryParamLogin(c *gin.Context) (*models.User, error) {
 	var login *string
 	usernameOrEmail, ok := c.GetQuery("login")
 	if ok {
@@ -68,15 +68,15 @@ func GetQueryParamLogin(c *gin.Context) (*models.User, error) {
 		return nil, NoLoginInformation
 	}
 
-	return database.AuthorizeWithPassword(database.GetDb(), *login, *passwordNullable)
+	return database.AuthorizeWithPassword(*login, *passwordNullable)
 }
 
-func GetQueryParamToken(c *gin.Context) (*models.User, error) {
+func QueryParamToken(c *gin.Context) (*models.User, error) {
 	token, ok := c.GetQuery("token")
 	if !ok {
 		return nil, MissingToken
 	} else {
-		return database.AuthorizeWithToken(database.GetDb(), token)
+		return database.AuthorizeWithToken(token)
 	}
 }
 

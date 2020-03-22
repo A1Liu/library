@@ -25,11 +25,19 @@ func main() {
 	books := v1.Group("/books")
 	web.AddBooksApi(books)
 
+	authors := v1.Group("/authors")
+	web.AddBooksApi(authors)
+
+	images := v1.Group("/images")
+	web.AddImagessApi(images)
+
 	v1.GET("/clear", func(c *gin.Context) {
 		err := database.Clear()
 		web.JsonInfer(c, err, err)
 	})
 
 	router.GET("/", web.ExecuteTemplate("index", "index.html", web.Index))
+
+	database.ConnectToDb()
 	router.Run(":80")
 }

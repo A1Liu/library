@@ -13,7 +13,7 @@ func AddBooksApi(books *gin.RouterGroup) {
 		if err != nil {
 			pageIndex = 0
 		}
-		books, err := database.SelectBooks(database.GetDb(), pageIndex)
+		books, err := database.SelectBooks(pageIndex)
 		JsonInfer(c, books, err)
 	})
 
@@ -21,18 +21,67 @@ func AddBooksApi(books *gin.RouterGroup) {
 		title := c.Query("title")
 		description := c.Query("description")
 
-		user, err := GetQueryParamLogin(c)
-		if err != nil && err != NoLoginInformation {
-			JsonFail(c, err)
+		user, err := QueryParamToken(c)
+		if err == NoLoginInformation {
+			user = nil
+		} else if JsonFail(c, err) {
+			return
+		}
+		bookId, err := database.InsertBook(user, title, description)
+		JsonInfer(c, bookId, err)
+	})
+
+	books.GET("/validate", func(c *gin.Context) {
+		user, err := QueryParamToken(c)
+		bookId, err := QueryParamUint(c, "bookId")
+		if JsonFail(c, err) {
 			return
 		}
 
-		if user.UserGroup == models.AdminUser {
+		err = database.ValidateAuthor(user, *bookId)
+		JsonInfer(c, nil, err)
+	})
 
+	books.GET("/get", func(c *gin.Context) {
+		bookId, err := QueryParamUint(c, "bookId")
+		if JsonFail(c, err) {
+			return
 		}
 
-		bookId, err := database.InsertBook(database.GetDb(), user, title, description)
-		JsonInfer(c, bookId, err)
+		book, err := database.GetBook(*bookId)
+		JsonInfer(c, book, err)
+	})
+
+	books.GET("/merge", func(c *gin.Context) {
+		from, err := QueryParamUint(c, "from")
+		if JsonFail(c, err) {
+			return
+		}
+
+		into, err := QueryParamUint(c, "into")
+		if JsonFail(c, err) {
+			return
+		}
+
+		user, err := QueryParamToken(c)
+		if JsonFail(c, err) {
+			return
+		}
+
+		ok, err := database.HasPermissions(user, []models.Permission{
+				*models.TargetedPermission(models.ValidateSingleBook, *from),
+				*models.TargetedPermission(models.ValidateSingleBook, *into),
+		})
+		if JsonFail(c, err) {
+			return
+		}
+		if !ok {
+			JsonFail(c, MissingPermissions)
+			return
+		}
+
+		err = database.MergeBookInto(*from, *into)
+		JsonInfer(c, nil, err)
 	})
 
 }

@@ -15,12 +15,9 @@ const (
 	ValidateSingleBook   uint64 = 5
 )
 
-type void struct{}
-
 type Permission struct {
-	PType     uint64
-	Reference uint64
-	_v        void
+	Type uint64
+	Ref  uint64
 }
 
 func TargetedPermission(permissionType uint64, id uint64) *Permission {
@@ -28,7 +25,7 @@ func TargetedPermission(permissionType uint64, id uint64) *Permission {
 		log.Fatal("Gave invalid permission type ", permissionType)
 	}
 
-	return &Permission{permissionType, id, void{}}
+	return &Permission{permissionType, id}
 }
 
 func BroadPermission(permissionType uint64) *Permission {
@@ -38,11 +35,11 @@ func BroadPermission(permissionType uint64) *Permission {
 		log.Fatal("Gave invalid permission type ", permissionType)
 	}
 
-	return &Permission{permissionType, 0, void{}}
+	return &Permission{permissionType, 0}
 }
 
 func (perm *Permission) IsTargeted() bool {
-	return IsTargeted(perm.PType)
+	return IsTargeted(perm.Type)
 }
 
 func IsTargeted(permissionType uint64) bool {
@@ -53,7 +50,7 @@ func IsValidPermissionType(value uint64) bool {
 	return value < 6
 }
 
-//func PType(permissionType uint64) string {
+//func Type(permissionType uint64) string {
 //	switch permissionType {
 //	case ValidateBooks:
 //		return "ValidateBooks"
@@ -92,15 +89,11 @@ func BuildPermission(permissionType string, reference uint64) (*Permission, erro
 	return nil, errors.New(fmt.Sprintf("permissionType %s is invalid", permissionType))
 }
 
-func PermissionContains(l, r uint64) bool {
-	if !IsValidPermissionType(l) || IsValidPermissionType(r) {
-		log.Fatal("Got invalid permission: (", l, ", ", r, ")")
-	}
-
-	if l == ValidateBooks {
-		return r == ValidateBooks || r == ValidateSingleBook
-	} else if l == ValidateAuthors {
-		return r == ValidateAuthors || r == ValidateSingleAuthor
+func PermissionContains(l, r Permission) bool {
+	if l.Type == ValidateBooks {
+		return r.Type == ValidateBooks || r.Type == ValidateSingleBook
+	} else if l.Type == ValidateAuthors {
+		return r.Type == ValidateAuthors || r.Type == ValidateSingleAuthor
 	}
 
 	return l == r

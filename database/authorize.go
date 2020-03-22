@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/A1Liu/webserver/models"
 	"github.com/A1Liu/webserver/utils"
@@ -17,11 +16,11 @@ var (
 	ExpiredToken      = errors.New("token has expired")
 )
 
-func AuthorizeWithPassword(db *sql.DB, usernameOrEmail, password string) (*models.User, error) {
+func AuthorizeWithPassword(usernameOrEmail, password string) (*models.User, error) {
 	rows, err := psql.Select("*").
 		From("users").
 		Where(sq.Or{sq.Eq{"username": usernameOrEmail}, sq.Eq{"email": usernameOrEmail}}).
-		RunWith(db).
+		RunWith(globalDb).
 		Query()
 
 	if err != nil {
@@ -52,7 +51,7 @@ func AuthorizeWithPassword(db *sql.DB, usernameOrEmail, password string) (*model
 	return nil, IncorrectPassword
 }
 
-func AuthorizeWithToken(db *sql.DB, token string) (*models.User, error) {
+func AuthorizeWithToken(token string) (*models.User, error) {
 	if len(token) != 128 {
 		return nil, InvalidToken
 	}
@@ -61,7 +60,7 @@ func AuthorizeWithToken(db *sql.DB, token string) (*models.User, error) {
 		From("users").
 		Join("tokens ON tokens.user_id = users.id").
 		Where(sq.Eq{"tokens.value": token}).
-		RunWith(db).
+		RunWith(globalDb).
 		Query()
 
 	if err != nil {
@@ -92,12 +91,12 @@ func AuthorizeWithToken(db *sql.DB, token string) (*models.User, error) {
 	return nil, ExpiredToken
 }
 
-func CreateToken(db *sql.DB, userId uint64) (string, error) {
+func CreateToken(userId uint64) (string, error) {
 	token := utils.RandomString(128)
 	_, err := psql.Insert("tokens").
 		Columns("expires_at", "user_id", "value").
 		Values(time.Now().Add(time.Hour*24*30), userId, token).
-		RunWith(db).
+		RunWith(globalDb).
 		Exec()
 
 	if err != nil {

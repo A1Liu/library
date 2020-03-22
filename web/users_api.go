@@ -18,34 +18,34 @@ func AddUsersApi(users *gin.RouterGroup) {
 		if err != nil {
 			pageIndex = 0
 		}
-		users, err := database.SelectUsers(database.GetDb(), pageIndex)
+		users, err := database.SelectUsers(pageIndex)
 		JsonInfer(c, users, err)
 	})
 
 	users.GET("/add", func(c *gin.Context) {
-		_, err := database.InsertUser(database.GetDb(), c.Query("username"),
+		_, err := database.InsertUser(c.Query("username"),
 			c.Query("email"), c.Query("password"), 0)
 		JsonInfer(c, nil, err)
 	})
 
 	users.GET("/token", func(c *gin.Context) {
-		user, err := GetQueryParamLogin(c)
+		user, err := QueryParamLogin(c)
 		if JsonFail(c, err) {
 			return
 		}
-		token, err := database.CreateToken(database.GetDb(), user.Id)
+		token, err := database.CreateToken(user.Id)
 		JsonInfer(c, token, err)
 	})
 
 	users.GET("/get", func(c *gin.Context) {
-		user, err := GetQueryParamToken(c)
+		user, err := QueryParamToken(c)
 		JsonInfer(c, user, err)
 	})
 }
 
 func AddPermissionsApi(permissions *gin.RouterGroup) {
 	permissions.GET("/add", func(c *gin.Context) {
-		user, err := GetQueryParamToken(c)
+		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return
 		}
@@ -66,7 +66,7 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 			return
 		}
 
-		ok, err := database.HasPermissions(database.GetDb(), user,
+		ok, err := database.HasPermissions(user,
 			[]models.Permission{*models.BroadPermission(models.ElevateUsers), *permission})
 		if JsonFail(c, err) {
 			return
@@ -76,12 +76,12 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 			return
 		}
 
-		id, err := database.AddPermission(database.GetDb(), user, *target, permission)
+		id, err := database.AddPermission(user, *target, permission)
 		JsonInfer(c, id, err)
 	})
 
 	permissions.GET("/remove", func(c *gin.Context) {
-		user, err := GetQueryParamToken(c)
+		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return
 		}
@@ -102,7 +102,7 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 			return
 		}
 
-		ok, err := database.HasPermissions(database.GetDb(), user,
+		ok, err := database.HasPermissions(user,
 			[]models.Permission{*models.BroadPermission(models.DemoteUsers), *permission})
 		if JsonFail(c, err) {
 			return
@@ -112,7 +112,7 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 			return
 		}
 
-		err = database.RemovePermissions(database.GetDb(), *target, permission)
+		err = database.RemovePermissions(*target, *permission)
 		JsonInfer(c, err, err)
 	})
 }

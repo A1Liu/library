@@ -18,33 +18,38 @@ const CompatVersion = 1
 var migrated = false
 
 var (
-	globalDatabase *sql.DB          = nil
-	globalMigrate  *migrate.Migrate = nil
-	psql                            = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	globalDb      *sql.DB          = nil
+	globalMigrate *migrate.Migrate = nil
+	psql                           = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 )
 
+func getMigrateInstance(db *sql.DB) *migrate.Migrate {
+	driver, err := postgres.WithInstance(db, new(postgres.Config))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	migrateInstance, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return migrateInstance
+}
+
 func getDb() (*sql.DB, *migrate.Migrate) {
-	if globalDatabase != nil {
-		return globalDatabase, globalMigrate
+	if globalDb != nil {
+		return globalDb, globalMigrate
 	}
 
-	connStr := "postgres://webserver:webserver@localhost/webserver"
+	connStr := "postgres://webserver:webserver@localhost/webserver?sslmode=disable"
 	var err error
-	globalDatabase, err = sql.Open("postgres", connStr)
+	globalDb, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	instance, err := postgres.WithInstance(globalDatabase, new(postgres.Config))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	globalMigrate, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", instance)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return globalDatabase, globalMigrate
+	globalMigrate = getMigrateInstance(globalDb)
+	return globalDb, globalMigrate
 }
 
 func ExperimentDb(try func(*sql.DB) error) {
@@ -134,14 +139,15 @@ func CommitDbMigrate(try func(*sql.DB) error) {
 }
 
 func Clear() error {
-	if globalDatabase == nil {
+	if globalDb == nil {
 		getDb()
 	}
 
-	err := globalMigrate.Down()
+	err := globalMigrate.Drop()
 	if err != nil && err != migrate.ErrNoChange {
 		return err
 	}
+	globalMigrate = getMigrateInstance(globalDb)
 	err = globalMigrate.Migrate(CompatVersion)
 	if err != nil {
 		return err
@@ -149,9 +155,9 @@ func Clear() error {
 	return nil
 }
 
-func GetDb() *sql.DB {
-	if globalDatabase != nil {
-		return globalDatabase
+func ConnectToDb() {
+	if globalDb != nil {
+		return
 	}
 
 	getDb()
@@ -159,5 +165,4 @@ func GetDb() *sql.DB {
 	if err != nil && err != migrate.ErrNoChange {
 		log.Fatal("Error when migrating: ", err)
 	}
-	return globalDatabase
 }

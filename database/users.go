@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/A1Liu/webserver/models"
 	sq "github.com/Masterminds/squirrel"
@@ -21,9 +20,9 @@ var (
 	rxEmail    = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
-func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) (uint64, error) {
+func InsertUser(username, email, password string, userGroup uint64) (uint64, error) {
 	username = strings.ToLower(username)
-	if len(username) < 2 || len(username) > 16 || strings.Contains(username, "@") {
+	if len(username) < 2 || len(username) > 16 || !rxUsername.MatchString(username) {
 		return 0, InvalidUsername
 	} else if len(email) > 254 || !rxEmail.MatchString(email) {
 		return 0, InvalidEmail
@@ -37,7 +36,7 @@ func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) 
 		Columns("username", "email", "password", "user_group").
 		Values(username, email, password, userGroup).
 		Suffix("RETURNING \"id\"").
-		RunWith(db).
+		RunWith(globalDb).
 		QueryRow()
 
 	var id uint64
@@ -45,7 +44,7 @@ func InsertUser(db *sql.DB, username, email, password string, userGroup uint64) 
 	return id, err
 }
 
-func SelectUsers(db *sql.DB, pageIndex uint64) ([]models.User, error) {
+func SelectUsers(pageIndex uint64) ([]models.User, error) {
 
 	users := make([]models.User, 50)[:0]
 
@@ -54,7 +53,7 @@ func SelectUsers(db *sql.DB, pageIndex uint64) ([]models.User, error) {
 		Where(sq.Lt{"id": 50 * (pageIndex + 1)}).
 		Where(sq.GtOrEq{"id": 50 * pageIndex}).
 		Limit(50).
-		RunWith(db).
+		RunWith(globalDb).
 		Query()
 
 	if err != nil {
