@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/A1Liu/webserver/models"
 	sq "github.com/Masterminds/squirrel"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -21,6 +22,7 @@ var (
 )
 
 func InsertUser(username, email, password string, userGroup uint64) (uint64, error) {
+	log.Println("new user", username, email)
 	username = strings.ToLower(username)
 	if len(username) < 2 || len(username) > 16 || !rxUsername.MatchString(username) {
 		return 0, InvalidUsername
