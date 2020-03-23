@@ -31,7 +31,7 @@ func JsonInfer(c *gin.Context, object interface{}, err error) {
 	if err != nil {
 		c.JSON(400, ErrorApiMessage{400, err.Error()})
 	} else {
-		c.JSON(200, OkApiMessage{200, object})
+		c.JSON(200, object)
 	}
 }
 

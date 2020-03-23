@@ -79,10 +79,10 @@ func shouldSucceed(endpoint string, queryParams QueryMap, returnValue string) {
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	shouldSucceed("/clear", QueryMap{}, "{\"status\":200,\"value\":null}")
+	shouldSucceed("/clear", QueryMap{}, "null")
 
 	shouldFail("/users/add", QueryMap{})
-	shouldSucceed("/users/all", QueryMap{}, "{\"status\":200,\"value\":[]}")
+	shouldSucceed("/users/all", QueryMap{}, "[]")
 
 	result := shouldSucceedReturning("/users/add", QueryMap{
 		"username": "hi",
