@@ -9,7 +9,8 @@ before_script:
   - psql -c "ALTER ROLE webserver WITH PASSWORD 'webserver';" -U webserver
 
 script:
-  - go test -v ./...
+  - go run main.go & disown
+  - go run cmd/tester.go
 
 services:
   - postgresql
