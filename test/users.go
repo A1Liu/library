@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+const (
+	rootUsername = "root"
+	rootEmail    = "root@gmail.com"
+	rootPassword = "rootpass"
+)
+
 var rootUserToken string = ""
 
 func GetRootUserToken() string {
@@ -19,16 +25,36 @@ func GetRootUserToken() string {
 	}
 
 	database.ConnectToDb()
-	_, err := database.InsertUser("root", "root@gmail.com", "rootpass", models.AdminUser)
+	_, err := database.InsertUser(rootUsername, rootEmail, rootPassword, models.AdminUser)
 	utils.FailIf(err, "couldn't connect to database")
 
 	resp := ShouldSucceedReturning(http.MethodGet, "/users/token", utils.QueryMap{
-		"login":    "root",
-		"password": "rootpass",
+		"login":    rootUsername,
+		"password": rootPassword,
 	}, url.Values{})
 
 	rootUserToken = resp.Body[1 : len(resp.Body)-1]
 	return rootUserToken
+}
+
+func TestUserPermissionsAdd() {
+	resp := ShouldSucceedReturning(http.MethodGet, "/users/get", utils.QueryMap{
+		"token": GetRootUserToken(),
+	}, url.Values{})
+
+	var user models.User
+	err := json.Unmarshal([]byte(resp.Body), &user)
+	utils.FailIf(err, "json unmarshalling failed for /users/get")
+
+	if user.Username != rootUsername {
+		utils.Fail("Username incorrect")
+	}
+	if user.Email != rootEmail {
+		utils.Fail("Email incorrect")
+	}
+	if user.UserGroup != models.AdminUser {
+		utils.Fail("usergroup incorrect")
+	}
 }
 
 func TestUserAdd() {
@@ -43,7 +69,8 @@ func TestUserAdd() {
 
 	var users []models.User
 	resp := ShouldSucceedReturning(http.MethodGet, "/users/all", utils.QueryMap{}, url.Values{})
-	json.Unmarshal([]byte(resp.Body), &users)
+	err := json.Unmarshal([]byte(resp.Body), &users)
+	utils.FailIf(err, "json unmarshalling failed for /users/all")
 
 	for _, user := range users {
 		if user.Username != strings.ToLower(username) || user.Email != email ||

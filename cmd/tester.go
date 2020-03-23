@@ -13,8 +13,6 @@ func main() {
 
 	test.ShouldSucceed(http.MethodGet, "/clear", utils.QueryMap{}, url.Values{}, "null")
 
-	token := test.GetRootUserToken()
-
-	log.Println(token)
+	test.TestUserPermissionsAdd()
 	test.TestUserAdd()
 }
