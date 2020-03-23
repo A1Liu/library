@@ -24,7 +24,7 @@ func AddUsersApi(users *gin.RouterGroup) {
 
 	users.GET("/add", func(c *gin.Context) {
 		_, err := database.InsertUser(c.Query("username"),
-			c.Query("email"), c.Query("password"), 0)
+			c.Query("email"), c.Query("password"), models.NormalUser)
 		JsonInfer(c, nil, err)
 	})
 
