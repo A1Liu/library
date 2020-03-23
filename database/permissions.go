@@ -56,6 +56,29 @@ func HasPermissions(user *models.User, permissions []models.Permission) (bool, e
 	return len(permissionMap) == 0, rows.Err()
 }
 
+func GetPermissions(user *models.User) ([]models.Permission, error) {
+	rows, err := psql.Select("permission_to", "metadata").
+		From("permissions").
+		Where(sq.Eq{"given_to": user.Id}).
+		RunWith(globalDb).
+		Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	perms := make([]models.Permission, 2)
+	var p models.Permission
+	for rows.Next() {
+		err := rows.Scan(&p.Type, &p.Ref)
+		if err != nil {
+			return perms, err
+		}
+	}
+
+	return perms, rows.Err()
+}
+
 func RemovePermissions(userId uint64, permission models.Permission) error {
 	rows, err := psql.Select("id", "permission_to", "metadata").
 		From("permissions").

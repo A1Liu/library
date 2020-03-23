@@ -5,7 +5,6 @@ import (
 	"github.com/A1Liu/webserver/models"
 	"github.com/A1Liu/webserver/utils"
 	sq "github.com/Masterminds/squirrel"
-	"log"
 	"time"
 )
 
@@ -17,35 +16,24 @@ var (
 )
 
 func AuthorizeWithPassword(usernameOrEmail, password string) (*models.User, error) {
-	rows, err := psql.Select("*").
+	row := psql.Select("*").
 		From("users").
 		Where(sq.Or{sq.Eq{"username": usernameOrEmail}, sq.Eq{"email": usernameOrEmail}}).
 		RunWith(globalDb).
-		Query()
+		QueryRow()
+
+	var user models.User
+	var correctPassword string
+	err := row.Scan(&user.Id, &user.CreatedAt, &user.Username,
+		&user.Email, &correctPassword, &user.UserGroup)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, NonexistentUser
-	}
-
-	var user models.User
-	var correctPassword string
-	rows.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email, &correctPassword, &user.UserGroup)
-	if rows.Next() {
-		log.Fatal("Unique constraint has been broken somehow.")
-	}
-
-	if err = rows.Err(); err != nil {
-		log.Fatal("Why?", err)
-	}
-
+	// @TODO Change this to use password hashing, salting, etc.
 	if correctPassword == password {
-		return &user, rows.Err()
+		return &user, nil
 	}
 
 	return nil, IncorrectPassword
@@ -56,36 +44,23 @@ func AuthorizeWithToken(token string) (*models.User, error) {
 		return nil, InvalidToken
 	}
 
-	rows, err := psql.Select("users.id", "users.created_at", "users.username", "users.email", "users.user_group", "tokens.expires_at").
+	row := psql.Select("users.id", "users.created_at", "users.username", "users.email", "users.user_group", "tokens.expires_at").
 		From("users").
 		Join("tokens ON tokens.user_id = users.id").
 		Where(sq.Eq{"tokens.value": token}).
 		RunWith(globalDb).
-		Query()
+		QueryRow()
 
+	var user models.User
+	var tokenExpiry time.Time
+	err := row.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email,
+		&user.UserGroup, &tokenExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, NonexistentUser
-	}
-
-	var user models.User
-	var tokenExpiry time.Time
-	rows.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email, &user.UserGroup, &tokenExpiry)
-	if rows.Next() {
-		log.Fatal("Unique constraint has been broken somehow.")
-	}
-
-	if err = rows.Err(); err != nil {
-		log.Fatal("Why?", err)
-	}
-
 	if time.Now().Before(tokenExpiry) {
-		return &user, rows.Err()
+		return &user, nil
 	}
 
 	return nil, ExpiredToken
