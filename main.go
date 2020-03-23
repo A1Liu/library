@@ -2,11 +2,10 @@ package main
 
 import (
 	"github.com/A1Liu/webserver/database"
-	"github.com/gin-gonic/gin"
-	"log"
-	// "github.com/A1Liu/webserver/models"
 	"github.com/A1Liu/webserver/web"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/gin-gonic/gin"
+	"log"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)

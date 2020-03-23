@@ -5,5 +5,5 @@ import (
 )
 
 func AddImagessApi(images *gin.RouterGroup) {
-	
+
 }
