@@ -84,11 +84,10 @@ func main() {
 	shouldFail("/users/add", QueryMap{})
 	shouldSucceed("/users/all", QueryMap{}, "[]")
 
-	result := shouldSucceedReturning("/users/add", QueryMap{
+	_ = shouldSucceedReturning("/users/add", QueryMap{
 		"username": "hi",
 		"email":    "hello@gmail.com",
 		"password": "asdfghjkl",
 	})
 
-	log.Println(result)
 }
