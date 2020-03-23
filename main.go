@@ -35,5 +35,5 @@ func main() {
 	router.GET("/", web.ExecuteTemplate("index", "index.html", web.Index))
 
 	database.ConnectToDb()
-	router.Run(":80")
+	router.Run(":8080")
 }

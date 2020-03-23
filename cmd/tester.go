@@ -18,7 +18,7 @@ func failIf(err error, msg string) {
 
 func shouldFail(endpoint string, queryParams QueryMap) {
 	var req http.Request
-	reqURL, err := url.Parse("http://localhost/api/v1" + endpoint)
+	reqURL, err := url.Parse("http://localhost:8080/api/v1" + endpoint)
 	failIf(err, "failed to parse endpoint")
 	q := reqURL.Query()
 	for k, v := range queryParams {
@@ -41,7 +41,7 @@ func shouldFail(endpoint string, queryParams QueryMap) {
 
 func shouldSucceedReturning(endpoint string, queryParams QueryMap) string {
 	var req http.Request
-	reqURL, err := url.Parse("http://localhost/api/v1" + endpoint)
+	reqURL, err := url.Parse("http://localhost:8080/api/v1" + endpoint)
 	failIf(err, "failed to parse endpoint")
 	q := reqURL.Query()
 	for k, v := range queryParams {
