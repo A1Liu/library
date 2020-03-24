@@ -25,7 +25,7 @@ func AuthorizeWithPassword(usernameOrEmail, password string) (*models.User, erro
 	var user models.User
 	var correctPassword string
 	err := row.Scan(&user.Id, &user.CreatedAt, &user.Username,
-		&user.Email, &correctPassword, &user.UserGroup)
+		&user.Email, &correctPassword, &user.UserGroup, &user.ProfilePic)
 
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func AuthorizeWithToken(token string) (*models.User, error) {
 		return nil, InvalidToken
 	}
 
-	row := psql.Select("users.id", "users.created_at", "users.username", "users.email", "users.user_group", "tokens.expires_at").
+	row := psql.Select("users.id", "users.created_at", "users.username", "users.email", "users.user_group", "users.profile_pic", "tokens.expires_at").
 		From("users").
 		Join("tokens ON tokens.user_id = users.id").
 		Where(sq.Eq{"tokens.value": token}).
@@ -54,7 +54,7 @@ func AuthorizeWithToken(token string) (*models.User, error) {
 	var user models.User
 	var tokenExpiry time.Time
 	err := row.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email,
-		&user.UserGroup, &tokenExpiry)
+		&user.UserGroup, &user.ProfilePic, &tokenExpiry)
 	if err != nil {
 		return nil, err
 	}

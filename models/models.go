@@ -17,11 +17,12 @@ var (
 )
 
 type User struct {
-	Id        uint64
-	CreatedAt time.Time
-	Username  string
-	Email     string
-	UserGroup uint64
+	Id         uint64
+	CreatedAt  time.Time
+	Username   string
+	Email      string
+	UserGroup  uint64
+	ProfilePic sql.NullInt64
 }
 
 func (user *User) NilId() *uint64 {
