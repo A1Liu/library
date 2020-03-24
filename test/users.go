@@ -58,10 +58,10 @@ func TestUserPermissionsAdd() {
 }
 
 func TestUserAdd() {
-	ShouldFail(http.MethodGet, "/users/add", utils.QueryMap{}, url.Values{})
+	ShouldFail(http.MethodPost, "/users/add", utils.QueryMap{}, url.Values{})
 
 	username, email, password := "hi", "hello@gmail.com", "asdfghjkl"
-	_ = ShouldSucceedReturning(http.MethodGet, "/users/add", utils.QueryMap{
+	_ = ShouldSucceedReturning(http.MethodPost, "/users/add", utils.QueryMap{
 		"username": username,
 		"email":    email,
 		"password": password,

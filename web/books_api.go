@@ -17,7 +17,7 @@ func AddBooksApi(books *gin.RouterGroup) {
 		JsonInfer(c, books, err)
 	})
 
-	books.GET("/add", func(c *gin.Context) {
+	books.POST("/add", func(c *gin.Context) {
 		title := c.Query("title")
 		description := c.Query("description")
 
@@ -31,7 +31,7 @@ func AddBooksApi(books *gin.RouterGroup) {
 		JsonInfer(c, bookId, err)
 	})
 
-	books.GET("/validate", func(c *gin.Context) {
+	books.POST("/validate", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		bookId, err := QueryParamUint(c, "bookId")
 		if JsonFail(c, err) {
@@ -52,7 +52,7 @@ func AddBooksApi(books *gin.RouterGroup) {
 		JsonInfer(c, book, err)
 	})
 
-	books.GET("/merge", func(c *gin.Context) {
+	books.POST("/merge", func(c *gin.Context) {
 		from, err := QueryParamUint(c, "from")
 		if JsonFail(c, err) {
 			return

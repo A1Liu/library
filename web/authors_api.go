@@ -25,7 +25,7 @@ func AddAuthorsApi(authors *gin.RouterGroup) {
 		JsonInfer(c, authors, err)
 	})
 
-	authors.GET("/add", func(c *gin.Context) {
+	authors.POST("/add", func(c *gin.Context) {
 		firstName, ok := c.GetQuery("firstName")
 		firstName = strings.TrimSpace(firstName)
 		if !ok || firstName == "" {
@@ -49,7 +49,7 @@ func AddAuthorsApi(authors *gin.RouterGroup) {
 		JsonInfer(c, id, err)
 	})
 
-	authors.GET("/validate", func(c *gin.Context) {
+	authors.POST("/validate", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		authorId, err := QueryParamUint(c, "authorId")
 		if JsonFail(c, err) {
@@ -60,7 +60,7 @@ func AddAuthorsApi(authors *gin.RouterGroup) {
 		JsonInfer(c, nil, err)
 	})
 
-	authors.GET("/credit", func(c *gin.Context) {
+	authors.POST("/credit", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return
@@ -80,7 +80,7 @@ func AddAuthorsApi(authors *gin.RouterGroup) {
 		JsonInfer(c, nil, err)
 	})
 
-	authors.GET("/validateCredit", func(c *gin.Context) {
+	authors.POST("/validateCredit", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return
@@ -122,7 +122,7 @@ func AddAuthorsApi(authors *gin.RouterGroup) {
 		JsonInfer(c, author, err)
 	})
 
-	authors.GET("/merge", func(c *gin.Context) {
+	authors.POST("/merge", func(c *gin.Context) {
 		from, err := QueryParamUint(c, "from")
 		if JsonFail(c, err) {
 			return

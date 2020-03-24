@@ -36,7 +36,7 @@ func validatePassword(password string) error {
 	return nil
 }
 
-func UpdateUser(id uint64, username, email string) error {
+func UpdateUser(user *models.User, username, email string) error {
 	username = strings.ToLower(username)
 	err := validateUser(username, email)
 	if err != nil {
@@ -46,7 +46,7 @@ func UpdateUser(id uint64, username, email string) error {
 	_, err = psql.Update("users").
 		Set("username", username).
 		Set("email", email).
-		Where(sq.Eq{"id": id}).
+		Where(sq.Eq{"id": user.Id}).
 		RunWith(globalDb).
 		Exec()
 	return err
@@ -63,6 +63,15 @@ func UpdateUserGroup(id uint64, userGroup uint64) error {
 		RunWith(globalDb).
 		Exec()
 
+	return err
+}
+
+func UpdateProfilePic(user *models.User, imageId uint64) error {
+	_, err := psql.Update("users").
+		Set("profile_pic", imageId).
+		Where(sq.Eq{"id": user.Id}).
+		RunWith(globalDb).
+		Exec()
 	return err
 }
 

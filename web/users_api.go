@@ -5,6 +5,8 @@ import (
 	"github.com/A1Liu/library/database"
 	"github.com/A1Liu/library/models"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
+	"strings"
 )
 
 var (
@@ -13,6 +15,7 @@ var (
 	MissingUsername    = errors.New("missing username")
 	EmptyUpdate        = errors.New("updating nothing")
 	GivingSelfAdmin    = errors.New("attempting to give self admin")
+	NotAnImage         = errors.New("data given was not an image")
 )
 
 func AddUsersApi(users *gin.RouterGroup) {
@@ -49,7 +52,37 @@ func AddUsersApi(users *gin.RouterGroup) {
 			return
 		}
 
-		err = database.UpdateUser(user.Id, username, email)
+		err = database.UpdateUser(user, username, email)
+		JsonInfer(c, nil, err)
+	})
+
+	users.POST("/updateImage", func(c *gin.Context) {
+		user, err := QueryParamToken(c)
+		if JsonFail(c, err) {
+			return
+		}
+
+		// @TODO Handle adversarial input
+		if !strings.HasPrefix(c.ContentType(), "image/") {
+			JsonFail(c, NotAnImage)
+			return
+		}
+
+		// @TODO Handle adversarial input
+		extension := strings.SplitN(c.ContentType(), "/", 2)[1]
+
+		// @TODO Limit size of file
+		image, err := ioutil.ReadAll(c.Request.Body)
+		if JsonFail(c, err) {
+			return
+		}
+
+		imageId, err := database.InsertImage(image, extension)
+		if JsonFail(c, err) {
+			return
+		}
+
+		err = database.UpdateProfilePic(user, imageId)
 		JsonInfer(c, nil, err)
 	})
 
@@ -98,7 +131,7 @@ func AddUsersApi(users *gin.RouterGroup) {
 		JsonInfer(c, nil, err)
 	})
 
-	users.GET("/add", func(c *gin.Context) {
+	users.POST("/add", func(c *gin.Context) {
 		username, ok := c.GetQuery("username")
 		if !ok {
 			JsonFail(c, MissingUsername)
@@ -135,7 +168,7 @@ func AddUsersApi(users *gin.RouterGroup) {
 }
 
 func AddPermissionsApi(permissions *gin.RouterGroup) {
-	permissions.GET("/add", func(c *gin.Context) {
+	permissions.POST("/add", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return
@@ -171,7 +204,7 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 		JsonInfer(c, nil, err)
 	})
 
-	permissions.GET("/remove", func(c *gin.Context) {
+	permissions.POST("/remove", func(c *gin.Context) {
 		user, err := QueryParamToken(c)
 		if JsonFail(c, err) {
 			return

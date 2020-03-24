@@ -1,3 +1,11 @@
+CREATE TABLE IF NOT EXISTS images (
+  id            SERIAL                                NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  extension     varchar(8)                            NOT NULL,
+  data          BYTEA                                 NOT NULL,
+  PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id            SERIAL                                NOT NULL,
   created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -5,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         text                                  NOT NULL UNIQUE,
   password      text                                  NOT NULL, -- @TODO make this secure
   user_group    integer                               NOT NULL,
+  profile_pic   integer REFERENCES images (id)        ,
   PRIMARY KEY (id)
 );
 
@@ -14,14 +23,6 @@ CREATE TABLE IF NOT EXISTS tokens (
   expires_at    TIMESTAMP WITH TIME ZONE              NOT NULL,
   user_id       integer REFERENCES users (id)         NOT NULL,
   value         char(128)                             NOT NULL UNIQUE,
-  PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS images (
-  id            SERIAL                                NOT NULL,
-  created_at    TIMESTAMP WITH TIME ZONE              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  extension     varchar(8)                            NOT NULL,
-  data          BYTEA                                 NOT NULL,
   PRIMARY KEY (id)
 );
 
