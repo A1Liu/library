@@ -19,7 +19,8 @@ func AddUsersApi(users *gin.RouterGroup) {
 	users.GET("/all", func(c *gin.Context) {
 		pageIndex, err := QueryParamUint(c, "pageIndex")
 		if err != nil {
-			*pageIndex = 0
+			var pI uint64 = 0
+			pageIndex = &pI
 		}
 		users, err := database.SelectUsers(*pageIndex)
 		JsonInfer(c, users, err)
