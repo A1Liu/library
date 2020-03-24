@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/models"
 	sq "github.com/Masterminds/squirrel"
 	"time"
 )

@@ -2,29 +2,119 @@ package web
 
 import (
 	"errors"
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/models"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 var (
 	MissingPermissions = errors.New("missing permissions")
+	MissingEmail       = errors.New("missing email")
+	MissingUsername    = errors.New("missing username")
+	EmptyUpdate        = errors.New("updating nothing")
+	GivingSelfAdmin    = errors.New("attempting to give self admin")
 )
 
 func AddUsersApi(users *gin.RouterGroup) {
 	users.GET("/all", func(c *gin.Context) {
-		pageIndex, err := strconv.ParseUint(c.Query("pageIndex"), 10, 64)
+		pageIndex, err := QueryParamUint(c, "pageIndex")
 		if err != nil {
-			pageIndex = 0
+			*pageIndex = 0
 		}
-		users, err := database.SelectUsers(pageIndex)
+		users, err := database.SelectUsers(*pageIndex)
 		JsonInfer(c, users, err)
 	})
 
+	users.POST("/update", func(c *gin.Context) {
+		user, err := QueryParamToken(c)
+		if JsonFail(c, err) {
+			return
+		}
+
+		changed := false
+		username, ok := c.GetQuery("username")
+		if !ok {
+			username = user.Username
+			changed = true
+		}
+		email, ok := c.GetQuery("email")
+		if !ok {
+			email = user.Email
+			changed = true
+		}
+
+		if !changed {
+			JsonFail(c, EmptyUpdate)
+			return
+		}
+
+		err = database.UpdateUser(user.Id, username, email)
+		JsonInfer(c, nil, err)
+	})
+
+	users.POST("/addAdmin", func(c *gin.Context) {
+		user, err := QueryParamToken(c)
+		if JsonFail(c, err) {
+			return
+		}
+
+		id, err := QueryParamUint(c, "id")
+		if JsonFail(c, err) {
+			return
+		}
+
+		if *id == user.Id {
+			JsonFail(c, GivingSelfAdmin)
+			return
+		}
+
+		if user.UserGroup != models.AdminUser {
+			JsonFail(c, MissingPermissions)
+			return
+		}
+
+		err = database.UpdateUserGroup(*id, models.AdminUser)
+		JsonInfer(c, nil, err)
+	})
+
+	users.POST("/removeAdmin", func(c *gin.Context) {
+		user, err := QueryParamToken(c)
+		if JsonFail(c, err) {
+			return
+		}
+
+		id, err := QueryParamUint(c, "id")
+		if JsonFail(c, err) {
+			return
+		}
+
+		if user.UserGroup != models.AdminUser {
+			JsonFail(c, MissingPermissions)
+			return
+		}
+
+		err = database.UpdateUserGroup(*id, models.NormalUser)
+		JsonInfer(c, nil, err)
+	})
+
 	users.GET("/add", func(c *gin.Context) {
-		_, err := database.InsertUser(c.Query("username"),
-			c.Query("email"), c.Query("password"), models.NormalUser)
+		username, ok := c.GetQuery("username")
+		if !ok {
+			JsonFail(c, MissingUsername)
+			return
+		}
+		email, ok := c.GetQuery("email")
+		if !ok {
+			JsonFail(c, MissingEmail)
+			return
+		}
+		password, ok := c.GetQuery("password")
+		if !ok {
+			JsonFail(c, MissingPassword)
+			return
+		}
+
+		err := database.InsertUser(username, email, password, models.NormalUser)
 		JsonInfer(c, nil, err)
 	})
 
@@ -76,8 +166,8 @@ func AddPermissionsApi(permissions *gin.RouterGroup) {
 			return
 		}
 
-		id, err := database.AddPermission(user, *target, permission)
-		JsonInfer(c, id, err)
+		err = database.AddPermission(user, *target, permission)
+		JsonInfer(c, nil, err)
 	})
 
 	permissions.GET("/remove", func(c *gin.Context) {

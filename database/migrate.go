@@ -41,7 +41,7 @@ func getDb() (*sql.DB, *migrate.Migrate) {
 		return globalDb, globalMigrate
 	}
 
-	connStr := "postgres://webserver:webserver@localhost/webserver?sslmode=disable"
+	connStr := "postgres://library:library@localhost/library?sslmode=disable"
 	var err error
 	globalDb, err = sql.Open("postgres", connStr)
 	if err != nil {

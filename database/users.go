@@ -2,9 +2,8 @@ package database
 
 import (
 	"errors"
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/models"
 	sq "github.com/Masterminds/squirrel"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -21,29 +20,104 @@ var (
 	rxEmail    = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
-func InsertUser(username, email, password string, userGroup uint64) (uint64, error) {
-	log.Println("new user", username, email)
-	username = strings.ToLower(username)
+func validateUser(username, email string) error {
 	if len(username) < 2 || len(username) > 16 || !rxUsername.MatchString(username) {
-		return 0, InvalidUsername
+		return InvalidUsername
 	} else if len(email) > 254 || !rxEmail.MatchString(email) {
-		return 0, InvalidEmail
-	} else if !models.IsValidUserGroup(userGroup) {
-		return 0, models.InvalidUserGroup
-	} else if len(password) < 5 || len(password) > 32 {
-		return 0, InvalidPassword
+		return InvalidEmail
+	}
+	return nil
+}
+
+func validatePassword(password string) error {
+	if len(password) < 5 || len(password) > 32 {
+		return InvalidPassword
+	}
+	return nil
+}
+
+func UpdateUser(id uint64, username, email string) error {
+	username = strings.ToLower(username)
+	err := validateUser(username, email)
+	if err != nil {
+		return err
 	}
 
-	row := psql.Insert("users").
-		Columns("username", "email", "password", "user_group").
-		Values(username, email, password, userGroup).
-		Suffix("RETURNING \"id\"").
+	_, err = psql.Update("users").
+		Set("username", username).
+		Set("email", email).
+		Where(sq.Eq{"id": id}).
+		RunWith(globalDb).
+		Exec()
+	return err
+}
+
+func UpdateUserGroup(id uint64, userGroup uint64) error {
+	if !models.IsValidUserGroup(userGroup) {
+		return models.InvalidUserGroup
+	}
+
+	_, err := psql.Update("users").
+		Set("user_group", userGroup).
+		Where(sq.Eq{"id": id}).
+		RunWith(globalDb).
+		Exec()
+
+	return err
+}
+
+func UpdateUserPassword(user *models.User, oldPass, newPass string) error {
+	err := validatePassword(newPass)
+	if err != nil {
+		return err
+	}
+
+	row := psql.Select("password").
+		From("users").
+		Where(sq.Eq{"id": user.Id}).
 		RunWith(globalDb).
 		QueryRow()
 
-	var id uint64
-	err := row.Scan(&id)
-	return id, err
+	var password string
+	err = row.Scan(&password)
+	if err != nil {
+		return err
+	}
+
+	if password != oldPass {
+		return IncorrectPassword
+	}
+
+	_, err = psql.Update("users").
+		Set("password", newPass).
+		Where(sq.Eq{"id": user.Id}).
+		RunWith(globalDb).
+		Exec()
+	return err
+}
+
+func InsertUser(username, email, password string, userGroup uint64) error {
+	username = strings.ToLower(username)
+	err := validateUser(username, email)
+	if err != nil {
+		return err
+	}
+
+	err = validatePassword(password)
+	if err != nil {
+		return err
+	}
+
+	if !models.IsValidUserGroup(userGroup) {
+		return models.InvalidUserGroup
+	}
+
+	_, err = psql.Insert("users").
+		Columns("username", "email", "password", "user_group").
+		Values(username, email, password, userGroup).
+		RunWith(globalDb).
+		Exec()
+	return err
 }
 
 func SelectUsers(pageIndex uint64) ([]models.User, error) {
@@ -73,4 +147,19 @@ func SelectUsers(pageIndex uint64) ([]models.User, error) {
 	}
 
 	return users, rows.Err()
+}
+
+func GetUser(id uint64) (*models.User, error) {
+	row := psql.Select("id", "created_at", "username", "email", "user_group").
+		From("users").
+		Where(sq.Eq{"id": id}).
+		RunWith(globalDb).
+		QueryRow()
+
+	var user models.User
+	err := row.Scan(&user.Id, &user.CreatedAt, &user.Username, &user.Email, &user.UserGroup)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

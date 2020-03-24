@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/models"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
@@ -69,8 +69,8 @@ func AddBooksApi(books *gin.RouterGroup) {
 		}
 
 		ok, err := database.HasPermissions(user, []models.Permission{
-				*models.TargetedPermission(models.ValidateSingleBook, *from),
-				*models.TargetedPermission(models.ValidateSingleBook, *into),
+			*models.TargetedPermission(models.ValidateSingleBook, *from),
+			*models.TargetedPermission(models.ValidateSingleBook, *into),
 		})
 		if JsonFail(c, err) {
 			return

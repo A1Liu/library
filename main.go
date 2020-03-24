@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/web"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/web"
 	"github.com/gin-gonic/gin"
 	"log"
 )

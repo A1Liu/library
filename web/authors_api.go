@@ -2,8 +2,8 @@ package web
 
 import (
 	"errors"
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/models"
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
@@ -11,7 +11,7 @@ import (
 
 var (
 	AuthorFirstNameInvalid = errors.New("author's first name is invalid")
-	AuthorLastNameInvalid = errors.New("author's last name is invalid")
+	AuthorLastNameInvalid  = errors.New("author's last name is invalid")
 )
 
 func AddAuthorsApi(authors *gin.RouterGroup) {

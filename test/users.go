@@ -2,9 +2,9 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/models"
-	"github.com/A1Liu/webserver/utils"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/models"
+	"github.com/A1Liu/library/utils"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,7 +25,7 @@ func GetRootUserToken() string {
 	}
 
 	database.ConnectToDb()
-	_, err := database.InsertUser(rootUsername, rootEmail, rootPassword, models.AdminUser)
+	err := database.InsertUser(rootUsername, rootEmail, rootPassword, models.AdminUser)
 	utils.FailIf(err, "couldn't connect to database")
 
 	resp := ShouldSucceedReturning(http.MethodGet, "/users/token", utils.QueryMap{

@@ -1,22 +1,18 @@
 package database
 
 import (
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/models"
 	sq "github.com/Masterminds/squirrel"
 )
 
 func AddPermission(giver *models.User, userId uint64,
-	permission *models.Permission) (uint64, error) {
-	row := psql.Insert("permissions").
+	permission *models.Permission) error {
+	_, err := psql.Insert("permissions").
 		Columns("given_to", "authorized_by", "permission_to", "metadata").
 		Values(userId, giver.Id, permission.Type, permission.Ref).
-		Suffix("RETURNING \"id\"").
 		RunWith(globalDb).
-		QueryRow()
-
-	var id uint64
-	err := row.Scan(&id)
-	return id, err
+		Exec()
+	return err
 }
 
 func HasPermissions(user *models.User, permissions []models.Permission) (bool, error) {

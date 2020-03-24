@@ -21,7 +21,7 @@ type Permission struct {
 }
 
 func TargetedPermission(permissionType uint64, id uint64) *Permission {
-	if permissionType != ValidateSingleAuthor && permissionType != ValidateSingleBook {
+	if !IsTargeted(permissionType) {
 		log.Fatal("Gave invalid permission type ", permissionType)
 	}
 
@@ -29,21 +29,15 @@ func TargetedPermission(permissionType uint64, id uint64) *Permission {
 }
 
 func BroadPermission(permissionType uint64) *Permission {
-	if !IsValidPermissionType(permissionType) ||
-		permissionType == ValidateSingleAuthor ||
-		permissionType == ValidateSingleBook {
+	if !IsValidPermissionType(permissionType) || IsTargeted(permissionType) {
 		log.Fatal("Gave invalid permission type ", permissionType)
 	}
 
 	return &Permission{permissionType, 0}
 }
 
-func (perm *Permission) IsTargeted() bool {
-	return IsTargeted(perm.Type)
-}
-
 func IsTargeted(permissionType uint64) bool {
-	return permissionType == ValidateSingleAuthor || permissionType == ValidateSingleBook
+	return permissionType > 3 && permissionType < 6
 }
 
 func IsValidPermissionType(value uint64) bool {

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/A1Liu/webserver/utils"
+	"github.com/A1Liu/library/utils"
 	"log"
 	"net/url"
 )

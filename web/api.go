@@ -3,8 +3,8 @@ package web
 import (
 	"errors"
 	"fmt"
-	"github.com/A1Liu/webserver/database"
-	"github.com/A1Liu/webserver/models"
+	"github.com/A1Liu/library/database"
+	"github.com/A1Liu/library/models"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )

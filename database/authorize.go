@@ -2,8 +2,8 @@ package database
 
 import (
 	"errors"
-	"github.com/A1Liu/webserver/models"
-	"github.com/A1Liu/webserver/utils"
+	"github.com/A1Liu/library/models"
+	"github.com/A1Liu/library/utils"
 	sq "github.com/Masterminds/squirrel"
 	"time"
 )
