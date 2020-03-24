@@ -4,9 +4,9 @@ go:
   - "1.14"
 
 before_script:
-  - psql -c "CREATE ROLE webserver WITH SUPERUSER LOGIN;" -U postgres
-  - psql -c "CREATE DATABASE webserver;" -U postgres
-  - psql -c "ALTER ROLE webserver WITH PASSWORD 'webserver';" -U webserver
+  - psql -c "CREATE ROLE library WITH SUPERUSER LOGIN;" -U postgres
+  - psql -c "CREATE DATABASE library;" -U postgres
+  - psql -c "ALTER ROLE library WITH PASSWORD 'library';" -U library
 
 
 script:
