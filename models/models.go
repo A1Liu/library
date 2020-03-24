@@ -70,8 +70,3 @@ type Author struct {
 	LastName    string
 	ImageId     sql.NullInt64
 }
-
-type WrittenBy struct {
-	AuthorId uint64
-	BookId   uint64
-}
