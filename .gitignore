@@ -2,4 +2,5 @@ library
 library.exe
 tester
 tester.exe
+main
 main.exe # For when someone calls `go build main.go`

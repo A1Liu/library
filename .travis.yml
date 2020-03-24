@@ -12,7 +12,7 @@ before_script:
 script:
   - go run main.go & disown
   - sleep 5
-  - go run cmd/tester.go
+  - go run cmd/tester/main.go
 
 services:
   - postgresql
