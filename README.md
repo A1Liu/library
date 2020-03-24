@@ -1,7 +1,7 @@
 # Web Server
 A simple web server I'm using to learn the Go programming language.
 
-[![Build Status](https://travis-ci.com/A1Liu/webserver.svg?branch=master)](https://travis-ci.com/A1Liu/webserver)
+[![Build Status](https://travis-ci.com/A1Liu/library.svg?branch=master)](https://travis-ci.com/A1Liu/library)
 
 ## Code Responsibilities
 - `/database` code must ensure that data taken in and out of the database is in
