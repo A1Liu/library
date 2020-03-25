@@ -1,9 +1,6 @@
 package main
 
-import (
-	"github.com/gocolly/colly"
-)
+import ()
 
 func main() {
-	_ = colly.ErrRobotsTxtBlocked
 }
